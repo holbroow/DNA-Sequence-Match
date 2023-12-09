@@ -17,12 +17,13 @@ let possibleNucleotides = {                     // ALL POSSIBLE ACTUAL NUCLEOTID
     'N' : ['A', 'G', 'C', 'T']
 }
 let sequences = [];						// PATTERNS TO BE SEARCHED FOR
-let possiblePatterns = [];              // POSSIBLE PATTERNS FROM THE INPUT SEQUENCES, GIVEN POSSIBLE NUCLEOTIDES
+let possiblePatterns = {};              // POSSIBLE PATTERNS FROM THE INPUT SEQUENCES, GIVEN POSSIBLE NUCLEOTIDES
 let patternFrequency = {};			    // THE FREQUENCY OF PATTERN APPEARANCE
 let prevLetter;						    // THE NEXT	LETTER TO BE CONSIDERED
 let currentLetter;					    // THE CURRENT LETTER BEING CONSIDERED
 let concatPattern;					    // THE CONCATENATED STRING TO COMPARE TO THE PATTERN
 let letterCount = 0;                    // NUMBER OF LETTERS CHECKED/ITERATED THROUGH
+let splitSequence = [];
 
 // STORES THE PATTERNS TO BE SEARCHED FOR AND RUNS TESTS
 testlib.on( 'ready', function( patterns ) {
@@ -30,11 +31,23 @@ testlib.on( 'ready', function( patterns ) {
     sequences = patterns;
 	console.log( "Sequences:", sequences);
     
+    // for each sequence
     sequences.array.forEach(element => {
-        // for each in sequences, create alternatives based on each letters possible alternative and store them in 
-        
+        // for each character
+        splitSequence.array.forEach(element => {
+            // split the sequence into characters
+            splitSequence = element.split();
+            // if the character has an alternative
+            if (possibleNucleotides.includes(element)) {
+                // swap out character for the alternative
+
+            }
+            // add new altered pattern to the resulting final array
+            possiblePatterns[splitSequence] = 0;
+        });
     });
 
+    // print final resulting array of patterns
     console.log(possiblePatterns);
 	//testlib.runTests();
 } );
