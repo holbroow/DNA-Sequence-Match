@@ -25,59 +25,59 @@ let concatPattern;					    // THE CONCATENATED STRING TO COMPARE TO THE PATTERN
 let letterCount = 0;                    // NUMBER OF LETTERS CHECKED/ITERATED THROUGH
 let splitSequence = [];
 
-// STORES THE PATTERNS TO BE SEARCHED FOR AND RUNS TESTS
+
+// Function to generate variations for a given sequence
+function generateVariations(sequence) {
+    // Check if the sequence contains any characters with alternatives
+    const hasAlternatives = sequence.split('').some(character => possibleNucleotides[character]);
+
+    // If there are no characters with alternatives, return the sequence as a single-element array
+    if (!hasAlternatives) {
+        return [sequence];
+    }
+
+    // Generate variations for characters with alternatives in the sequence
+    let variations = sequence.split('').reduce((acc, character, index) => {
+        // If the character has alternatives in possibleNucleotides
+        if (possibleNucleotides[character]) {
+            // Generate variations for each alternative of the character
+            let altVariations = possibleNucleotides[character].flatMap(alt => {
+                // Replace the character with the alternative and generate variations for the modified sequence
+                let newSequence = sequence.substring(0, index) + alt + sequence.substring(index + 1);
+                return generateVariations(newSequence);
+            });
+            // Concatenate the variations obtained from the alternatives to the accumulator array
+            return acc.concat(altVariations);
+        }
+        // If the character has no alternatives, return the accumulator array as is
+        return acc;
+    }, []);
+
+    // Return the array of variations for the sequence
+    return variations;
+}
+
+
+
 testlib.on('ready', function(patterns) {
-    // STORE AND PRINT DEFINED SEQUENCES
+    // Assign the input patterns to the variable 'sequences'
     sequences = patterns;
+    // Print the received sequences to the console
     console.log("Sequences:", sequences);
 
-    // FOR EACH STORED SEQUENCE
-    sequences.forEach(sequence => {
-        // SPLIT THE SEQUENCE INTO CHARACTERS
-        splitSequence = sequence.split('');
-        // CREATE ARRAY FOR POSSIBLE ALTERNATE SEQUENCES FOR A GIVEN SEQUENCE
-        let alteredSequences = [];
-        
-        // FOR EACH CHARACTER IN THE SEQUENCE
-        splitSequence.forEach(character => {
-            //// another for each here to check all characters OTHER THAN the one in the above forEach statement
-            splitRemaining = 
-            // IF THE CHARACTER RESIDES IN POSSIBLE NUCLEOTIDES
-            if (possibleNucleotides[character]) {
-                // FOR ALL ALTERNATIVE CHARACTERS
-                possibleNucleotides[character].forEach(alt => {
-                    // COPY THE UNMODIFIED SEQUENCE
-                    let alteredSequence = [...splitSequence];
-                    // SWAP OUT THE CHARACTER WITH THE ALTERNATIVE
-                    alteredSequence[splitSequence.indexOf(character)] = alt;
-                    // ADD THE NEW ALTERED SEQUENCE TO THE ARRAY OF ALTERNATIVE SEQUENCES FOR THAT SEQUENCE
-                    alteredSequences.push(alteredSequence.join(''));
-                });
-            }
-        });
-        
-        // FOR EACH ALTERNATIVE SEQUENCE
-        alteredSequences.forEach(alteredSeq => {
-            // IF THE PATTERN ISNT ALREADY IN POSSIBLE PATTERNS, ADD IT
-            // ELSE INCREMENT THE KEY VALUE
-            if (!possiblePatterns[alteredSeq]) {
-                possiblePatterns[alteredSeq] = 1;
-            } else {
-                possiblePatterns[alteredSeq]++;
-            }
-        });
-    });
-
-    // PRINT POSSIBLE PATTERNS
-    console.log("Possible Patterns:", possiblePatterns);
+    // Generate all variations for each sequence and flatten the resulting arrays into a single array
+    const allVariations = sequences.flatMap(sequence => generateVariations(sequence));
+    
+    // PRINT ALL POSSIBLE PATTERNS
+    console.log("Possible Patterns:", allVariations);
 
     // RUN TESTS
-    //testlib.runTests();
+    //// testlib.runTests();
 });
 
 
 // THIS IS THE CODE THAT ACTS ON EACH PIECE OF DATA
-testlib.on( 'data', function( data ) {
+testlib.on( 'data', function( data ) { 
     letterCount++; // INCREMENT COUNT FOR LETTER BYTE COUNT
 	currentLetter = data;
 	console.log( "<<<", currentLetter ); // PRINT CURRENT LETTER READ
