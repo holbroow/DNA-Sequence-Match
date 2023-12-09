@@ -17,7 +17,7 @@ let possibleNucleotides = {                     // ALL POSSIBLE ACTUAL NUCLEOTID
     'N' : ['A', 'G', 'C', 'T']
 }
 let sequences = [];						// PATTERNS TO BE SEARCHED FOR
-let possiblePatterns = {};              // POSSIBLE PATTERNS FROM THE INPUT SEQUENCES, GIVEN POSSIBLE NUCLEOTIDES
+let possiblePatterns = [];              // POSSIBLE PATTERNS FROM THE INPUT SEQUENCES, GIVEN POSSIBLE NUCLEOTIDES
 let patternFrequency = {};			    // THE FREQUENCY OF PATTERN APPEARANCE
 let prevLetter;						    // THE NEXT	LETTER TO BE CONSIDERED
 let currentLetter;					    // THE CURRENT LETTER BEING CONSIDERED
@@ -26,31 +26,54 @@ let letterCount = 0;                    // NUMBER OF LETTERS CHECKED/ITERATED TH
 let splitSequence = [];
 
 // STORES THE PATTERNS TO BE SEARCHED FOR AND RUNS TESTS
-testlib.on( 'ready', function( patterns ) {
-	// take in patterns as an array and append all possible patterns, given possibleNucleotides, to possiblePatterns
+testlib.on('ready', function(patterns) {
+    // STORE AND PRINT DEFINED SEQUENCES
     sequences = patterns;
-	console.log( "Sequences:", sequences);
-    
-    // for each sequence
-    sequences.array.forEach(element => {
-        // for each character
-        splitSequence.array.forEach(element => {
-            // split the sequence into characters
-            splitSequence = element.split();
-            // if the character has an alternative
-            if (possibleNucleotides.includes(element)) {
-                // swap out character for the alternative
+    console.log("Sequences:", sequences);
 
+    // FOR EACH STORED SEQUENCE
+    sequences.forEach(sequence => {
+        // SPLIT THE SEQUENCE INTO CHARACTERS
+        splitSequence = sequence.split('');
+        // CREATE ARRAY FOR POSSIBLE ALTERNATE SEQUENCES FOR A GIVEN SEQUENCE
+        let alteredSequences = [];
+        
+        // FOR EACH CHARACTER IN THE SEQUENCE
+        splitSequence.forEach(character => {
+            //// another for each here to check all characters OTHER THAN the one in the above forEach statement
+            splitRemaining = 
+            // IF THE CHARACTER RESIDES IN POSSIBLE NUCLEOTIDES
+            if (possibleNucleotides[character]) {
+                // FOR ALL ALTERNATIVE CHARACTERS
+                possibleNucleotides[character].forEach(alt => {
+                    // COPY THE UNMODIFIED SEQUENCE
+                    let alteredSequence = [...splitSequence];
+                    // SWAP OUT THE CHARACTER WITH THE ALTERNATIVE
+                    alteredSequence[splitSequence.indexOf(character)] = alt;
+                    // ADD THE NEW ALTERED SEQUENCE TO THE ARRAY OF ALTERNATIVE SEQUENCES FOR THAT SEQUENCE
+                    alteredSequences.push(alteredSequence.join(''));
+                });
             }
-            // add new altered pattern to the resulting final array
-            possiblePatterns[splitSequence] = 0;
+        });
+        
+        // FOR EACH ALTERNATIVE SEQUENCE
+        alteredSequences.forEach(alteredSeq => {
+            // IF THE PATTERN ISNT ALREADY IN POSSIBLE PATTERNS, ADD IT
+            // ELSE INCREMENT THE KEY VALUE
+            if (!possiblePatterns[alteredSeq]) {
+                possiblePatterns[alteredSeq] = 1;
+            } else {
+                possiblePatterns[alteredSeq]++;
+            }
         });
     });
 
-    // print final resulting array of patterns
-    console.log(possiblePatterns);
-	//testlib.runTests();
-} );
+    // PRINT POSSIBLE PATTERNS
+    console.log("Possible Patterns:", possiblePatterns);
+
+    // RUN TESTS
+    //testlib.runTests();
+});
 
 
 // THIS IS THE CODE THAT ACTS ON EACH PIECE OF DATA
