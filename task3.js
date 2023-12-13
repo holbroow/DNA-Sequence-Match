@@ -47,19 +47,31 @@ function generateVariations(sequence) {
                 let newSequence = sequence.substring(0, index) + alt + sequence.substring(index + 1);
                 return generateVariations(newSequence);
             });
-            // Concatenate the variations obtained from the alternatives to the accumulator array
+            // CONCATENATE OBTAINED VARIATIONS TO AN ACCUMULATOR ARRAY FOR THE SEQUENCE
             return acc.concat(altVariations);
         }
-        // If the character has no alternatives, return the accumulator array as is
+        // IF THE CHARACTER DOESNT HAVE ALTERATIVES, RETURN THE ACCUMULATOR ARRAY AS IS
         return acc;
     }, []);
 
-    // Return the array of variations for the sequence
+    // RETURN THE RESULTING ARRAY OF VARIATIONS FOR THE SEQUENCE
     return variations;
 }
 
+// SANITISES A STRING TO NOT INCLUDE ANY HIDDEN/NOT ALPHA CHARACTERS
+function sanitiseString(string) {
+    let newString = [];
+    Array.from(string).forEach(char => {
+        if (char <= 'z' && char >= 'a') {
+            newString.push(char);
+        }
+    });
+    return toString(newString);
+}
 
-testlib.on('ready', function(patterns) {
+
+// AT THE START OF THE PROGRAM
+testlib.on('ready', (patterns) => {
     // Assign the input patterns to the variable 'sequences'
     sequences = patterns;
     // Print the received sequences to the console
@@ -77,8 +89,9 @@ testlib.on('ready', function(patterns) {
     // Generate all variations for each sequence and flatten the resulting arrays into a single array
     allVariations = sequences.flatMap(sequence => generateVariations(sequence));
 
-    // need to remove duplicates here!!!!!!!!!!!!!!
+    // REMOVE DUPLICATES IN ALLVARIATIONS ARRAY
     
+
     // PRINT ALL POSSIBLE PATTERNS
     console.log("Possible Patterns:", allVariations);
 
@@ -88,7 +101,7 @@ testlib.on('ready', function(patterns) {
 
 
 // THIS IS THE CODE THAT ACTS ON EACH PIECE OF DATA
-testlib.on( 'data', function( data ) { 
+testlib.on( 'data', ( data ) => { 
     letterCount++; // INCREMENT COUNT FOR LETTER BYTE COUNT
 	currentLetter = data;
 	console.log( "<<<", currentLetter ); // PRINT CURRENT LETTER READ
@@ -104,27 +117,28 @@ testlib.on( 'data', function( data ) {
 
 	// IF THE CONCATENATED STRING IS A PATTERN, UPDATE ITS VALUE IN THE TABLE
     allVariations.forEach(variation => {
-        let varLength = variation.length-1;
-        bufferString.slice(bufferString.length - (varLength - 1));
-
-        if (allVariations.includes(bufferString)) {
+        let varLength = variation.length;
+        // if (bufferString.length > varLength) {
+        //     bufferString.slice(bufferString.length - (varLength - 1));
+        // }
+        if (sanitiseString(bufferString).endsWith(sanitiseString(variation))) {
             console.log("YES");
             if (!patternFrequency[bufferString]) {
                 patternFrequency[bufferString] = 1;
             } else {
                 patternFrequency[bufferString] += 1;
             }
-            testlib.foundMatch(bufferString, letterCount);
+            testlib.foundMatch(variation, letterCount);
         }
     });
 } );
 
 
 // AT THE END OF THE TEST, THE FREQUENCY TABLE IS PRINTED
-testlib.on( 'end', function( data ) {
+testlib.on( 'end', ( data ) => {
 	console.log( "<<<", data );
     testlib.frequencyTable(patternFrequency);
 } );
 
 // RUNS TEST
-testlib.setup( 3 ); 
+testlib.setup( 3 );
