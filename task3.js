@@ -5,25 +5,26 @@ const testlib = require( './testlib.js' );
 
 
 let possibleNucleotides = {             // ALL POSSIBLE ACTUAL NUCLEOTIDES FOR EACH RECORDED CHARACTER
-    'R' : ['G', 'A'],
-    'Y' : ['T', 'C'],
-    'K' : ['G', 'T'],
-    'M' : ['A', 'C'],
-    'S' : ['G', 'C'],
-    'W' : ['A', 'T'],
-    'B' : ['G', 'T', 'C'],
-    'D' : ['G', 'A', 'T'],
-    'H' : ['A', 'C', 'T'],
-    'V' : ['G', 'C', 'A'],
-    'N' : ['A', 'G', 'C', 'T']
-}
+    'R': ['G', 'A', 'R'],
+    'Y': ['T', 'C', 'Y'],
+    'K': ['G', 'T', 'K'],
+    'M': ['A', 'C', 'M'],
+    'S': ['G', 'C', 'S'],
+    'W': ['A', 'T', 'W'],
+    'B': ['G', 'T', 'C', 'B'],
+    'D': ['G', 'A', 'T', 'D'],
+    'H': ['A', 'C', 'T', 'H'],
+    'V': ['G', 'C', 'A', 'V'],
+    'N': ['A', 'G', 'C', 'T', 'N']
+};
 let sequences = [];						// PATTERNS TO BE SEARCHED FOR
 let patternFrequency = {};			    // THE FREQUENCY OF PATTERN APPEARANCE
 let currentLetter;					    // THE CURRENT LETTER BEING CONSIDERED
 let letterCount = 0;                    // NUMBER OF LETTERS CHECKED/ITERATED THROUGH
 let largestSequenceSize = 0;            // THE NUMBER OF CHARACTERS IN THE LARGEST SEQUENCE (USED WHEN DECIDING A BUFFER SIZE)
 let buffer;                             // THE BUFFER THAT STORES THE LAST n CHARACTERS FROM THE DATA FILE
-let allVariations;                      // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES
+let allUnfilteredVariations;            // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES
+let allVariations = [];                      // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES (with duplicates removed!)
 let bufferString;                       // THE BUFFER AT ANY GIVEN POINT, CONVERTED TO A PLAIN STRING FOR COMPARISON
 
 
@@ -60,21 +61,23 @@ function generateVariations(sequence) {
 
 // SANITISES A STRING TO NOT INCLUDE ANY HIDDEN/NOT ALPHA CHARACTERS
 function sanitiseString(string) {
-    let newString = [];
-    Array.from(string).forEach(char => {
-        if (char <= 'z' && char >= 'a') {
-            newString.push(char);
-        }
-    });
-    return toString(newString);
+    // let newString = [];
+    // Array.from(string).forEach(char => {
+    //     if (char <= 'Z' && char >= 'A') {
+    //         newString.push(char);
+    //     }
+    // });
+    // let stringResult = toString(newString);
+    // return stringResult;
+    return string.replace(/[^a-zA-Z]/g, ''); // ONLY KEEP LETTERS BETWEEN 'a' and 'Z' (a-z + A-Z)
 }
 
 
 // AT THE START OF THE PROGRAM
 testlib.on('ready', (patterns) => {
-    // Assign the input patterns to the variable 'sequences'
+    // ASSIGN INPUT PATTERNS TO AN ARRAY
     sequences = patterns;
-    // Print the received sequences to the console
+    // PRINT THE RESULTING PATTERN/SEQUENCE ARRAY
     console.log("Sequences:", sequences);
 
     // DECIDE THE CHARACTER BUFFER SIZE FOR THE TEST (SIZE OF LARGEST SEQUENCE)
@@ -87,10 +90,14 @@ testlib.on('ready', (patterns) => {
     buffer = new Array(largestSequenceSize);
 
     // Generate all variations for each sequence and flatten the resulting arrays into a single array
-    allVariations = sequences.flatMap(sequence => generateVariations(sequence));
+    allUnfilteredVariations = sequences.flatMap(sequence => generateVariations(sequence));
 
     // REMOVE DUPLICATES IN ALLVARIATIONS ARRAY
-    
+    allUnfilteredVariations.forEach(element => {
+        if (!allVariations.includes(element)) {
+            allVariations.push(element);
+        }
+    });
 
     // PRINT ALL POSSIBLE PATTERNS
     console.log("Possible Patterns:", allVariations);
@@ -121,8 +128,10 @@ testlib.on( 'data', ( data ) => {
         // if (bufferString.length > varLength) {
         //     bufferString.slice(bufferString.length - (varLength - 1));
         // }
-        if (sanitiseString(bufferString).endsWith(sanitiseString(variation))) {
+        if (sanitiseString(bufferString).includes(sanitiseString(variation))) {
             console.log("YES");
+            console.log(sanitiseString(variation));
+            console.log(sanitiseString(bufferString));
             if (!patternFrequency[bufferString]) {
                 patternFrequency[bufferString] = 1;
             } else {
