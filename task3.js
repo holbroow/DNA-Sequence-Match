@@ -27,23 +27,23 @@ let allVariations;                      // ALL VARIATIONS FOUND FROM USING POSSI
 let bufferString;                       // THE BUFFER AT ANY GIVEN POINT, CONVERTED TO A PLAIN STRING FOR COMPARISON
 
 
-// Function to generate variations for a given sequence
+// FUNCTION TO GENERATE VARIATIONS FOR A GIVEN SEQUENCE
 function generateVariations(sequence) {
-    // Check if the sequence contains any characters with alternatives
+    // CHECK IF ANY CHARACTERS IN THE SEQUENCE HAVE ALTERNATIVES
     const hasAlternatives = sequence.split('').some(character => possibleNucleotides[character]);
 
-    // If there are no characters with alternatives, return the sequence as a single-element array
+    // IF THERE ARE NO ALTERNATIVES, RETURN SINGLE SEQUENCE AS IT IS UNIQUE
     if (!hasAlternatives) {
         return [sequence];
     }
 
-    // Generate variations for characters with alternatives in the sequence
+    // IF THERE ARE ALTERNATIVES, GENERATE ALTERNATIVES GIVEN ALTERNATE CHARACTERS
     let variations = sequence.split('').reduce((acc, character, index) => {
-        // If the character has alternatives in possibleNucleotides
+        // IF THE CURRENT CHARACTER HAS ALTERNATIVES IN POSSIBLE NUCLEOTIDE DICTIONARY
         if (possibleNucleotides[character]) {
-            // Generate variations for each alternative of the character
+            // GENERATE VARIATIONS FOR EACH ALTERNATIVE OF THE CHARACTER
             let altVariations = possibleNucleotides[character].flatMap(alt => {
-                // Replace the character with the alternative and generate variations for the modified sequence
+                // REPLACE THE CHARACTER WITH THE ALTERNATIVE CHARACTER AND THEN FURTHER GENERATE ALTERNATE VARIATIONS FOR THAT SEQUENCE
                 let newSequence = sequence.substring(0, index) + alt + sequence.substring(index + 1);
                 return generateVariations(newSequence);
             });
@@ -76,6 +76,8 @@ testlib.on('ready', function(patterns) {
 
     // Generate all variations for each sequence and flatten the resulting arrays into a single array
     allVariations = sequences.flatMap(sequence => generateVariations(sequence));
+
+    // need to remove duplicates here!!!!!!!!!!!!!!
     
     // PRINT ALL POSSIBLE PATTERNS
     console.log("Possible Patterns:", allVariations);
@@ -101,10 +103,9 @@ testlib.on( 'data', function( data ) {
 	console.log("<<<<<<", bufferString); // PRINT CONCATENATED STRING (PATTERN IN QUESTION)
 
 	// IF THE CONCATENATED STRING IS A PATTERN, UPDATE ITS VALUE IN THE TABLE
-    allVariations.forEach(element => {
-        let varLength = element.length;
-        bufferString.slice(bufferString.length - varLength);
-        console.log(bufferString);
+    allVariations.forEach(variation => {
+        let varLength = variation.length-1;
+        bufferString.slice(bufferString.length - (varLength - 1));
 
         if (allVariations.includes(bufferString)) {
             console.log("YES");
