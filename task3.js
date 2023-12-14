@@ -4,18 +4,31 @@
 const testlib = require( './testlib.js' );
 
 
+// let possibleNucleotides = {             // ALL POSSIBLE ACTUAL NUCLEOTIDES FOR EACH RECORDED CHARACTER
+//     'R': ['G', 'A', 'R'],
+//     'Y': ['T', 'C', 'Y'],
+//     'K': ['G', 'T', 'K'],
+//     'M': ['A', 'C', 'M'],
+//     'S': ['G', 'C', 'S'],
+//     'W': ['A', 'T', 'W'],
+//     'B': ['G', 'T', 'C', 'B'],
+//     'D': ['G', 'A', 'T', 'D'],
+//     'H': ['A', 'C', 'T', 'H'],
+//     'V': ['G', 'C', 'A', 'V'],
+//     'N': ['A', 'G', 'C', 'T', 'N']
+// };
 let possibleNucleotides = {             // ALL POSSIBLE ACTUAL NUCLEOTIDES FOR EACH RECORDED CHARACTER
-    'R': ['G', 'A', 'R'],
-    'Y': ['T', 'C', 'Y'],
-    'K': ['G', 'T', 'K'],
-    'M': ['A', 'C', 'M'],
-    'S': ['G', 'C', 'S'],
-    'W': ['A', 'T', 'W'],
-    'B': ['G', 'T', 'C', 'B'],
-    'D': ['G', 'A', 'T', 'D'],
-    'H': ['A', 'C', 'T', 'H'],
-    'V': ['G', 'C', 'A', 'V'],
-    'N': ['A', 'G', 'C', 'T', 'N']
+    'R': ['G', 'A'],
+    'Y': ['T', 'C'],
+    'K': ['G', 'T'],
+    'M': ['A', 'C'],
+    'S': ['G', 'C'],
+    'W': ['A', 'T'],
+    'B': ['G', 'T', 'C'],
+    'D': ['G', 'A', 'T'],
+    'H': ['A', 'C', 'T'],
+    'V': ['G', 'C', 'A'],
+    'N': ['A', 'G', 'C', 'T']
 };
 let sequences = [];						// PATTERNS TO BE SEARCHED FOR
 let patternFrequency = {};			    // THE FREQUENCY OF PATTERN APPEARANCE
@@ -24,7 +37,7 @@ let letterCount = 0;                    // NUMBER OF LETTERS CHECKED/ITERATED TH
 let largestSequenceSize = 0;            // THE NUMBER OF CHARACTERS IN THE LARGEST SEQUENCE (USED WHEN DECIDING A BUFFER SIZE)
 let buffer;                             // THE BUFFER THAT STORES THE LAST n CHARACTERS FROM THE DATA FILE
 let allUnfilteredVariations;            // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES
-let allVariations = [];                      // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES (with duplicates removed!)
+let allVariations = [];                 // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES (with duplicates removed!)
 let bufferString;                       // THE BUFFER AT ANY GIVEN POINT, CONVERTED TO A PLAIN STRING FOR COMPARISON
 
 
@@ -120,7 +133,6 @@ testlib.on( 'data', ( data ) => {
         buffer.push(currentLetter);
     }
     bufferString = buffer.join("");
-	console.log("<<<<<<", bufferString); // PRINT CONCATENATED STRING (PATTERN IN QUESTION)
 
 	// IF THE CONCATENATED STRING IS A PATTERN, UPDATE ITS VALUE IN THE TABLE
     allVariations.forEach(variation => {
@@ -128,20 +140,24 @@ testlib.on( 'data', ( data ) => {
         // if (bufferString.length > varLength) {
         //     bufferString.slice(bufferString.length - (varLength - 1));
         // }
-        if (sanitiseString(bufferString).includes(sanitiseString(variation))) {
-            console.log("YES");
-            console.log(sanitiseString(variation));
-            console.log(sanitiseString(bufferString));
-            if (!patternFrequency[bufferString]) {
-                patternFrequency[bufferString] = 1;
+        if (sanitiseString(bufferString).endsWith(sanitiseString(variation))) {
+            if (!patternFrequency[variation]) {
+                patternFrequency[variation] = 1;
             } else {
-                patternFrequency[bufferString] += 1;
+                patternFrequency[variation] += 1;
             }
             testlib.foundMatch(variation, letterCount);
         }
     });
 } );
 
+// WHEN END OF THE LINE IS REACHED, RESET COUNTS AND TABLE DATA AND CONTINUE
+testlib.on( 'reset', ( data ) => {
+	console.log( "<<<", data );
+    testlib.frequencyTable(patternFrequency);
+    patternFrequency = {};
+    letterCount = 0;
+} );
 
 // AT THE END OF THE TEST, THE FREQUENCY TABLE IS PRINTED
 testlib.on( 'end', ( data ) => {
@@ -150,4 +166,4 @@ testlib.on( 'end', ( data ) => {
 } );
 
 // RUNS TEST
-testlib.setup( 3 );
+testlib.setup( 2 );
