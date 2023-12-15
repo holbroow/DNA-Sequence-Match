@@ -80,7 +80,7 @@ module.exports.runTests = function() {
  *
  * Must be called before runTests().
  */
-module.exports.setup = function( testNumber, ioDelay = 0 ) {
+module.exports.setup = function( testNumber, ioDelay = 25 ) {
 	interval = ioDelay;
 	let dataFile = fs.createReadStream( `task${testNumber}.data`, { encoding: 'utf8', fd: null } );
 	dataFile.on('readable', function() {

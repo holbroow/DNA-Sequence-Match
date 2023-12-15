@@ -1,22 +1,12 @@
-// TASK 3 (TASK 1 AND 2 EXTENDED)
+/* SCC212 JS Coursework
+   Will Holbrook
+   Student ID: 38722798
+*/
 
 "use strict";
 const testlib = require( './testlib.js' );
 
 
-// let possibleNucleotides = {             // ALL POSSIBLE ACTUAL NUCLEOTIDES FOR EACH RECORDED CHARACTER
-//     'R': ['G', 'A', 'R'],
-//     'Y': ['T', 'C', 'Y'],
-//     'K': ['G', 'T', 'K'],
-//     'M': ['A', 'C', 'M'],
-//     'S': ['G', 'C', 'S'],
-//     'W': ['A', 'T', 'W'],
-//     'B': ['G', 'T', 'C', 'B'],
-//     'D': ['G', 'A', 'T', 'D'],
-//     'H': ['A', 'C', 'T', 'H'],
-//     'V': ['G', 'C', 'A', 'V'],
-//     'N': ['A', 'G', 'C', 'T', 'N']
-// };
 let possibleNucleotides = {             // ALL POSSIBLE ACTUAL NUCLEOTIDES FOR EACH RECORDED CHARACTER
     'R': ['G', 'A'],
     'Y': ['T', 'C'],
@@ -31,14 +21,14 @@ let possibleNucleotides = {             // ALL POSSIBLE ACTUAL NUCLEOTIDES FOR E
     'N': ['A', 'G', 'C', 'T']
 };
 let sequences = [];						// PATTERNS TO BE SEARCHED FOR
+let largestSequenceSize = 0;            // THE NUMBER OF CHARACTERS IN THE LARGEST SEQUENCE (USED WHEN DECIDING A BUFFER SIZE)
 let patternFrequency = {};			    // THE FREQUENCY OF PATTERN APPEARANCE
 let currentLetter;					    // THE CURRENT LETTER BEING CONSIDERED
 let letterCount = 0;                    // NUMBER OF LETTERS CHECKED/ITERATED THROUGH
-let largestSequenceSize = 0;            // THE NUMBER OF CHARACTERS IN THE LARGEST SEQUENCE (USED WHEN DECIDING A BUFFER SIZE)
 let buffer;                             // THE BUFFER THAT STORES THE LAST n CHARACTERS FROM THE DATA FILE
-let allUnfilteredVariations;            // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES
-let allVariations = [];                 // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES (with duplicates removed!)
 let bufferString;                       // THE BUFFER AT ANY GIVEN POINT, CONVERTED TO A PLAIN STRING FOR COMPARISON
+let allVariations = [];                 // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES (with duplicates removed!)
+let allUnfilteredVariations;            // ALL VARIATIONS FOUND FROM USING POSSIBLE NUCLEOTIDES AND PROVIDED SEQUENCES
 
 
 // FUNCTION TO GENERATE VARIATIONS FOR A GIVEN SEQUENCE
@@ -52,25 +42,31 @@ function generateVariations(sequence) {
     }
 
     // IF THERE ARE ALTERNATIVES, GENERATE ALTERNATIVES GIVEN ALTERNATE CHARACTERS
-    let variations = sequence.split('').reduce((acc, character, index) => {
+    let variations = sequence.split('').reduce((accumulator, character, index) => {
         // IF THE CURRENT CHARACTER HAS ALTERNATIVES IN POSSIBLE NUCLEOTIDE DICTIONARY
         if (possibleNucleotides[character]) {
             // GENERATE VARIATIONS FOR EACH ALTERNATIVE OF THE CHARACTER
             let altVariations = possibleNucleotides[character].flatMap(alt => {
                 // REPLACE THE CHARACTER WITH THE ALTERNATIVE CHARACTER AND THEN FURTHER GENERATE ALTERNATE VARIATIONS FOR THAT SEQUENCE
                 let newSequence = sequence.substring(0, index) + alt + sequence.substring(index + 1);
-                return generateVariations(newSequence);
+                // if (!seenSequences.includes(newSequence)) {
+                //     seenSequences.push(newSequence);
+                    return generateVariations(newSequence);
+                //}
             });
+            // ADD ORIGINAL SEQUENCE AS ONE OF THE VARIATIONS
+            altVariations.push(sequence);
             // CONCATENATE OBTAINED VARIATIONS TO AN ACCUMULATOR ARRAY FOR THE SEQUENCE
-            return acc.concat(altVariations);
+            return accumulator.concat(altVariations);
         }
         // IF THE CHARACTER DOESNT HAVE ALTERATIVES, RETURN THE ACCUMULATOR ARRAY AS IS
-        return acc;
+        return accumulator;
     }, []);
 
     // RETURN THE RESULTING ARRAY OF VARIATIONS FOR THE SEQUENCE
     return variations;
 }
+
 
 // SANITISES A STRING TO NOT INCLUDE ANY HIDDEN/NOT ALPHA CHARACTERS
 function sanitiseString(string) {
@@ -88,10 +84,13 @@ function sanitiseString(string) {
 
 // AT THE START OF THE PROGRAM
 testlib.on('ready', (patterns) => {
-    // ASSIGN INPUT PATTERNS TO AN ARRAY
-    sequences = patterns;
+    // SANITISE AND APPEND THE PATTERNS/SEQUENCES, REMOVING ANY UNWANTED CHARS
+    patterns.forEach(element => {
+        sequences.push(sanitiseString(element));
+    });
+
     // PRINT THE RESULTING PATTERN/SEQUENCE ARRAY
-    console.log("Sequences:", sequences);
+    console.log("Sequences:", sequences, "\n");
 
     // DECIDE THE CHARACTER BUFFER SIZE FOR THE TEST (SIZE OF LARGEST SEQUENCE)
     sequences.forEach(element => {
@@ -99,7 +98,6 @@ testlib.on('ready', (patterns) => {
             largestSequenceSize = element.length;
         }
     });
-    console.log(largestSequenceSize);
     buffer = new Array(largestSequenceSize);
 
     // Generate all variations for each sequence and flatten the resulting arrays into a single array
@@ -113,18 +111,17 @@ testlib.on('ready', (patterns) => {
     });
 
     // PRINT ALL POSSIBLE PATTERNS
-    console.log("Possible Patterns:", allVariations);
+    console.log("Possible Patterns: ", allVariations, "\n");
 
     // RUN TESTS
     testlib.runTests();
 } );
 
-
 // THIS IS THE CODE THAT ACTS ON EACH PIECE OF DATA
 testlib.on( 'data', ( data ) => { 
     letterCount++; // INCREMENT COUNT FOR LETTER BYTE COUNT
 	currentLetter = data;
-	console.log( "<<<", currentLetter ); // PRINT CURRENT LETTER READ
+	// console.log( "<<<", currentLetter ); // PRINT CURRENT LETTER READ
 	
     if (buffer.length < largestSequenceSize) {
         buffer.push(currentLetter);
@@ -133,30 +130,36 @@ testlib.on( 'data', ( data ) => {
         buffer.push(currentLetter);
     }
     bufferString = buffer.join("");
+    // console.log(bufferString);
 
 	// IF THE CONCATENATED STRING IS A PATTERN, UPDATE ITS VALUE IN THE TABLE
     allVariations.forEach(variation => {
-        let varLength = variation.length;
+        let varLength = sanitiseString(variation).length;
         // if (bufferString.length > varLength) {
         //     bufferString.slice(bufferString.length - (varLength - 1));
         // }
         if (sanitiseString(bufferString).endsWith(sanitiseString(variation))) {
-            if (!patternFrequency[variation]) {
-                patternFrequency[variation] = 1;
+            if (!patternFrequency[sanitiseString(variation)]) {
+                patternFrequency[sanitiseString(variation)] = 1;
             } else {
-                patternFrequency[variation] += 1;
+                patternFrequency[sanitiseString(variation)] += 1;
             }
-            testlib.foundMatch(variation, letterCount);
+            // console.log("Buf Unsanitised: " + bufferString);
+            // console.log("Buf Sanitised: " + sanitiseString(bufferString));
+            // console.log("Var Unsanitised: " + variation);
+            // console.log("Var Sanitised: " + sanitiseString(variation));
+            testlib.foundMatch(sanitiseString(variation), (letterCount - sanitiseString(variation).length));
         }
     });
 } );
 
 // WHEN END OF THE LINE IS REACHED, RESET COUNTS AND TABLE DATA AND CONTINUE
 testlib.on( 'reset', ( data ) => {
-	console.log( "<<<", data );
+	// console.log( "<<<", data );
     testlib.frequencyTable(patternFrequency);
     patternFrequency = {};
     letterCount = 0;
+    console.log("\nNew line started!");
 } );
 
 // AT THE END OF THE TEST, THE FREQUENCY TABLE IS PRINTED
@@ -164,6 +167,7 @@ testlib.on( 'end', ( data ) => {
 	console.log( "<<<", data );
     testlib.frequencyTable(patternFrequency);
 } );
+
 
 // RUNS TEST
 testlib.setup( 2 );
